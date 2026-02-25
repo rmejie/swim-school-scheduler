@@ -57,8 +57,6 @@ describe('InstructorForm', () => {
   it('should validate that name is required', async () => {
     renderForm();
     
-    const submitButton = screen.getByRole('button', { name: /add instructor/i });
-    
     await act(async () => {
       fireEvent.submit(screen.getByRole('form'));
     });
@@ -86,7 +84,7 @@ describe('InstructorForm', () => {
 
     await waitFor(() => {
       expect(mockedAddInstructor).toHaveBeenCalledWith({ name: 'Jane Doe' });
-      expect(defaultProps.onSuccess).toHaveBeenCalledWith('inst123');
+      expect(defaultProps.onSuccess).toHaveBeenCalledWith('inst123', 'Jane Doe');
     });
   });
 
@@ -180,7 +178,6 @@ describe('InstructorForm', () => {
     renderForm();
     
     const nameInput = screen.getByLabelText(/instructor name/i);
-    const submitButton = screen.getByRole('button', { name: /add instructor/i });
 
     // Submit with invalid data
     await act(async () => {

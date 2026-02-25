@@ -19,7 +19,6 @@ export const auth = getAuth(app);
 onAuthStateChanged(auth, (user) => {
   if (!user) {
     signInAnonymously(auth).catch((err) => {
-      // eslint-disable-next-line no-console
       console.error('[firebase] Anonymous sign-in failed:', err);
     });
   }

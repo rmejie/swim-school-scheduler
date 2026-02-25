@@ -11,11 +11,10 @@
  */
 export function generateTimeSlots(start: string, end: string, increment: number): string[] {
   const slots: string[] = [];
-  let [sh, sm] = start.split(':').map(Number);
-  let [eh, em] = end.split(':').map(Number);
-  let startMins = sh * 60 + sm;
+  const [sh, sm] = start.split(':').map(Number);
+  const [eh, em] = end.split(':').map(Number);
+  const startMins = sh * 60 + sm;
   let endMins = eh * 60 + em;
-  // Handle overnight
   if (endMins < startMins) endMins += 24 * 60;
   for (let mins = startMins; mins <= endMins; mins += increment) {
     const h = Math.floor((mins % (24 * 60)) / 60);
@@ -64,10 +63,10 @@ export function checkTimeOverlap(startA: string, endA: string, startB: string, e
     const [h, m] = t.split(':').map(Number);
     return h * 60 + m;
   };
-  let sA = toMins(startA);
-  let eA = toMins(endA) + buffer;
-  let sB = toMins(startB);
-  let eB = toMins(endB);
+  const sA = toMins(startA);
+  const eA = toMins(endA) + buffer;
+  const sB = toMins(startB);
+  const eB = toMins(endB);
 
   // Helper to check overlap for a single day
   const overlap = (aStart: number, aEnd: number, bStart: number, bEnd: number) =>
@@ -123,7 +122,7 @@ export function validateAppointmentTime(date: Date, open: string, close: string)
   const mins = h * 60 + m;
   const [oh, om] = open.split(':').map(Number);
   const [ch, cm] = close.split(':').map(Number);
-  let openMins = oh * 60 + om;
+  const openMins = oh * 60 + om;
   let closeMins = ch * 60 + cm;
   if (closeMins < openMins) closeMins += 24 * 60;
   return mins >= openMins && mins <= closeMins;
@@ -162,10 +161,10 @@ export function parseTimeString(time: string): Date {
  */
 export function generateBlockSlots(start: string = '08:00', end: string = '20:00'): string[] {
   const slots: string[] = [];
-  let [sh, sm] = start.split(':').map(Number);
-  let [eh, em] = end.split(':').map(Number);
-  let startMins = sh * 60 + sm;
-  let endMins = eh * 60 + em;
+  const [sh, sm] = start.split(':').map(Number);
+  const [eh, em] = end.split(':').map(Number);
+  const startMins = sh * 60 + sm;
+  const endMins = eh * 60 + em;
   for (let mins = startMins; mins <= endMins; mins += 20) {
     const h = Math.floor((mins % (24 * 60)) / 60);
     const m = mins % 60;
@@ -190,7 +189,7 @@ export function generateBlockSlots(start: string = '08:00', end: string = '20:00
  */
 export function getAppointmentBlocks(start: string, blockCount: number): string[] {
   const blocks: string[] = [];
-  let [h, m] = start.split(':').map(Number);
+  const [h, m] = start.split(':').map(Number);
   let mins = h * 60 + m;
   for (let i = 0; i < blockCount; i++) {
     const blockH = Math.floor((mins % (24 * 60)) / 60);

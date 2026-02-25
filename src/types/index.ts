@@ -59,6 +59,7 @@ export interface Client {
  * @property endTime - End time in HH:MM (24-hour) format
  * @property type - 'individual' or 'recurring'
  * @property recurringId - (Optional) ID for recurring series
+ * @property blocks - (Optional) Array of 20-minute block start times occupied by this appointment
  * @property status - 'scheduled' or 'cancelled'
  * @property createdAt - Firestore Timestamp when the appointment was created
  *
@@ -88,6 +89,7 @@ export interface Appointment {
   endTime: string; // HH:MM
   type: 'individual' | 'recurring';
   recurringId?: string;
+  blocks?: string[];
   status: 'scheduled' | 'cancelled';
   createdAt: Timestamp;
 } 

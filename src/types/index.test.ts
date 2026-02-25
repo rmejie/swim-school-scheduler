@@ -1,10 +1,19 @@
 import { describe, it, expect } from 'vitest';
 import type { Instructor, Client, Appointment } from './index';
 
+import type { Timestamp } from 'firebase/firestore';
+
 // Mock Firestore Timestamp for type checking
-class MockTimestamp {
-  static now() { return new MockTimestamp(); }
-  toDate() { return new Date(); }
+function mockTimestamp(): Timestamp {
+  return {
+    seconds: 0,
+    nanoseconds: 0,
+    toDate: () => new Date(),
+    toMillis: () => 0,
+    isEqual: () => true,
+    toJSON: () => ({ seconds: 0, nanoseconds: 0, type: 'timestamp' }),
+    valueOf: () => '',
+  } as unknown as Timestamp;
 }
 
 describe('Instructor interface', () => {
@@ -12,11 +21,11 @@ describe('Instructor interface', () => {
     const instructor: Instructor = {
       id: 'inst1',
       name: 'Jane Doe',
-      createdAt: MockTimestamp.now(),
+      createdAt: mockTimestamp(),
     };
     expect(instructor.id).toBeTypeOf('string');
     expect(instructor.name).toBeTypeOf('string');
-    expect(instructor.createdAt).toBeInstanceOf(MockTimestamp);
+    expect(instructor.createdAt).toBeDefined();
   });
 });
 
@@ -27,13 +36,13 @@ describe('Client interface', () => {
       name: 'John Smith',
       email: 'john@example.com',
       phone: '555-1234',
-      createdAt: MockTimestamp.now(),
+      createdAt: mockTimestamp(),
     };
     expect(client.id).toBeTypeOf('string');
     expect(client.name).toBeTypeOf('string');
     expect(client.email).toBeTypeOf('string');
     expect(client.phone).toBeTypeOf('string');
-    expect(client.createdAt).toBeInstanceOf(MockTimestamp);
+    expect(client.createdAt).toBeDefined();
   });
 });
 
@@ -50,7 +59,7 @@ describe('Appointment interface', () => {
       endTime: '10:30',
       type: 'individual',
       status: 'scheduled',
-      createdAt: MockTimestamp.now(),
+      createdAt: mockTimestamp(),
     };
     const recurring: Appointment = {
       ...individual,
@@ -75,9 +84,9 @@ describe('Appointment interface', () => {
       endTime: '11:30',
       type: 'individual',
       status: 'scheduled',
-      createdAt: MockTimestamp.now(),
+      createdAt: mockTimestamp(),
     };
-    expect(appt.createdAt).toBeInstanceOf(MockTimestamp);
+    expect(appt.createdAt).toBeDefined();
     expect(typeof appt.date).toBe('string');
     expect(typeof appt.startTime).toBe('string');
     expect(typeof appt.endTime).toBe('string');

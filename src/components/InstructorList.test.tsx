@@ -31,11 +31,11 @@ describe('InstructorList', () => {
     toJSON: () => ({}),
   };
 
-  const mockInstructors: Instructor[] = [
-    { id: 'inst1', name: 'Jane Doe', createdAt: mockTimestamp as any },
-    { id: 'inst2', name: 'John Smith', createdAt: mockTimestamp as any },
-    { id: 'inst3', name: 'Sarah Johnson', createdAt: mockTimestamp as any },
-  ];
+  const mockInstructors = [
+    { id: 'inst1', name: 'Jane Doe', createdAt: mockTimestamp },
+    { id: 'inst2', name: 'John Smith', createdAt: mockTimestamp },
+    { id: 'inst3', name: 'Sarah Johnson', createdAt: mockTimestamp },
+  ] as unknown as Instructor[];
 
   beforeEach(() => {
     vi.clearAllMocks();

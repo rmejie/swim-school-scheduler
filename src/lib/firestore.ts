@@ -2,8 +2,6 @@ import {
   collection,
   addDoc,
   getDocs,
-  query,
-  where,
   updateDoc,
   doc,
   Timestamp,
@@ -33,11 +31,8 @@ export async function addInstructor(data: { name: string }): Promise<string> {
   // In browser runtime, use mock unless explicitly enabled. In tests, always use real.
   const isTest = import.meta.env?.MODE === 'test';
   if (typeof window !== 'undefined' && !useRealFirestoreInBrowser && !isTest) {
-    console.log('[addInstructor] Using browser mock implementation');
     return browserAddInstructor(data);
   }
-  // Use the real implementation (Node/test or browser with VITE_USE_FIRESTORE=true)
-  console.log('[addInstructor] Using real Firebase implementation');
   if (!data.name || data.name.length < 2) throw new Error('Name required');
   const docRef = await addDoc(collection(db, 'instructors'), {
     name: data.name,
@@ -52,8 +47,29 @@ export async function addInstructor(data: { name: string }): Promise<string> {
  */
 export async function getInstructors(): Promise<Instructor[]> {
   const snap = await getDocs(collection(db, 'instructors'));
-  return snap.docs.map((d: any) => ({ id: d.id, ...d.data() }));
+  return snap.docs.map(d => ({ id: d.id, ...d.data() })) as Instructor[];
 }
+
+// Fallback/mock for addClient in the browser demo
+const browserClients: Array<{ id: string; name: string; email: string; phone: string }> = [];
+
+function browserAddClient(data: Partial<Client>): Promise<string> {
+  return new Promise((resolve, reject) => {
+    if (!data.name || data.name.length < 2) return reject(new Error('Name required'));
+    if (!data.email) return reject(new Error('Email required'));
+    const id = 'demo-' + Math.random().toString(36).slice(2, 8);
+    browserClients.push({ id, name: data.name, email: data.email, phone: data.phone || '' });
+    setTimeout(() => resolve(id), 800);
+  });
+}
+
+function browserGetClients(): Promise<Client[]> {
+  return new Promise((resolve) => {
+    setTimeout(() => resolve(browserClients.map(c => ({ ...c, createdAt: {} as Client['createdAt'] }))), 300);
+  });
+}
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /**
  * Adds a new client to Firestore.
@@ -63,6 +79,11 @@ export async function getInstructors(): Promise<Instructor[]> {
  */
 export async function addClient(data: Partial<Client>): Promise<string> {
   if (!data.name || !data.email) throw new Error('Name and email required');
+  if (!EMAIL_REGEX.test(data.email)) throw new Error('Invalid email format');
+  const isTest = import.meta.env?.MODE === 'test';
+  if (typeof window !== 'undefined' && !useRealFirestoreInBrowser && !isTest) {
+    return browserAddClient(data);
+  }
   const docRef = await addDoc(collection(db, 'clients'), {
     name: data.name,
     email: data.email,
@@ -77,8 +98,12 @@ export async function addClient(data: Partial<Client>): Promise<string> {
  * @returns Array of Client objects
  */
 export async function getClients(): Promise<Client[]> {
+  const isTest = import.meta.env?.MODE === 'test';
+  if (typeof window !== 'undefined' && !useRealFirestoreInBrowser && !isTest) {
+    return browserGetClients();
+  }
   const snap = await getDocs(collection(db, 'clients'));
-  return snap.docs.map((d: any) => ({ id: d.id, ...d.data() }));
+  return snap.docs.map(d => ({ id: d.id, ...d.data() })) as Client[];
 }
 
 /**
@@ -87,17 +112,11 @@ export async function getClients(): Promise<Client[]> {
  * @returns The new appointment's ID
  * @throws Error if double booking detected
  */
-export async function addAppointment(data: Partial<Appointment> & { instructorId: string; startTime: string; blockCount: number }): Promise<string> {
-  // Get existing appointments for instructor on the same date
+export async function addAppointment(data: Partial<Appointment> & { instructorId: string; startTime: string; blockCount: number; date: string }): Promise<string> {
   const existing = await getAppointmentsByInstructor(data.instructorId, data.date);
   const requestedBlocks = getAppointmentBlocks(data.startTime, data.blockCount);
-  console.log('[addAppointment] data:', data);
-  console.log('[addAppointment] requestedBlocks:', requestedBlocks);
-  console.log('[addAppointment] existing:', existing);
   for (const appt of existing) {
-    console.log('[addAppointment] checking appt.blocks:', appt.blocks);
     if (appt.blocks && checkBlockConflict(requestedBlocks, appt.blocks)) {
-      console.log('[addAppointment] Double booking detected:', appt);
       throw new Error('Double booking');
     }
   }
@@ -117,9 +136,8 @@ export async function addAppointment(data: Partial<Appointment> & { instructorId
  */
 export async function getAppointmentsByDate(date: string): Promise<Appointment[]> {
   const snap = await getDocs(collection(db, 'appointments'));
-  return snap.docs
-    .map((d: any) => ({ id: d.id, ...d.data() }))
-    .filter((a: any) => a.date === date);
+  const all = snap.docs.map(d => ({ id: d.id, ...d.data() })) as Appointment[];
+  return all.filter(a => a.date === date);
 }
 
 /**
@@ -130,12 +148,8 @@ export async function getAppointmentsByDate(date: string): Promise<Appointment[]
  */
 export async function getAppointmentsByInstructor(instructorId: string, date: string): Promise<Appointment[]> {
   const snap = await getDocs(collection(db, 'appointments'));
-  const mapped = snap.docs.map((d: any) => ({ id: d.id, ...d.data() }));
-  console.log('[getAppointmentsByInstructor] instructorId:', instructorId, 'date:', date);
-  console.log('[getAppointmentsByInstructor] mapped:', mapped);
-  const filtered = mapped.filter((a: any) => a.instructorId === instructorId && a.date === date);
-  console.log('[getAppointmentsByInstructor] filtered:', filtered);
-  return filtered;
+  const all = snap.docs.map(d => ({ id: d.id, ...d.data() })) as Appointment[];
+  return all.filter(a => a.instructorId === instructorId && a.date === date);
 }
 
 /**
@@ -154,7 +168,7 @@ export async function cancelAppointment(id: string): Promise<void> {
  */
 export async function generateRecurringAppointments(data: { instructorId: string; startTime: string; blockCount: number; startDate: string; occurrences: number }): Promise<string[]> {
   const ids: string[] = [];
-  let date = new Date(data.startDate);
+  const date = new Date(data.startDate);
   for (let i = 0; i < data.occurrences; i++) {
     const apptData = {
       instructorId: data.instructorId,

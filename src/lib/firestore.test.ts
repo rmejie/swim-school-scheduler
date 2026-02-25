@@ -1,12 +1,11 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import * as firestoreUtils from './firestore';
-import type { Instructor, Client, Appointment } from '../types';
-import { generateBlockSlots, getAppointmentBlocks, checkBlockConflict } from '../utils/timeSlots';
+import { getAppointmentBlocks } from '../utils/timeSlots';
 import * as firestore from 'firebase/firestore';
 
 // Mock Firebase Firestore
 vi.mock('firebase/firestore', () => ({
-  collection: (db: unknown, name: string) => name,
+  collection: (_db: unknown, name: string) => name,
   addDoc: vi.fn(),
   getDocs: vi.fn(),
   query: vi.fn(),
@@ -29,7 +28,6 @@ describe('firestore utilities', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockedGetDocs.mockImplementation((col) => {
-      console.log('[MOCK getDocs] col:', col);
       if (col === 'appointments') {
         return Promise.resolve({
           docs: [
@@ -80,12 +78,12 @@ describe('firestore utilities', () => {
 
   it('addClient: should validate required fields and add client', async () => {
     mockedAddDoc.mockResolvedValue({ id: 'client1' });
-    const result = await firestoreUtils.addClient({ name: 'John', email: 'j@e.com', phone: '555', createdAt: { seconds: 0, nanoseconds: 0, toDate: () => new Date(), toMillis: () => 0, isEqual: () => true } });
+    const result = await firestoreUtils.addClient({ name: 'John', email: 'j@e.com', phone: '555' });
     expect(result).toBe('client1');
   });
 
   it('addClient: should throw if required fields missing', async () => {
-    await expect(firestoreUtils.addClient({ name: '', email: '', phone: '', createdAt: { seconds: 0, nanoseconds: 0, toDate: () => new Date(), toMillis: () => 0, isEqual: () => true } })).rejects.toThrow();
+    await expect(firestoreUtils.addClient({ name: '', email: '' })).rejects.toThrow();
   });
 
   it('getClients: should return array of clients', async () => {
@@ -99,22 +97,16 @@ describe('firestore utilities', () => {
     const startTime = '10:00';
     const blockCount = 2;
     const date = '2024-07-01';
-    const requestedBlocks = getAppointmentBlocks(startTime, blockCount); // e.g., ['10:00']
-    // No need to spy on getAppointmentsByInstructor; real logic will use Firestore mock
-    try {
-      await firestoreUtils.addAppointment({ instructorId: 'inst1', startTime, blockCount, date } as any);
-    } catch (e) {
-      console.log('[TEST] addAppointment error:', e);
-      expect((e as Error).message).toBe('Double booking');
-      return;
-    }
-    throw new Error('Expected double booking error');
+    getAppointmentBlocks(startTime, blockCount);
+    await expect(
+      firestoreUtils.addAppointment({ instructorId: 'inst1', startTime, blockCount, date })
+    ).rejects.toThrow('Double booking');
   });
 
   it('addAppointment: should add appointment if no conflict', async () => {
     // No need to spy on getAppointmentsByInstructor; real logic will use Firestore mock
     mockedAddDoc.mockResolvedValue({ id: 'appt3' });
-    const result = await firestoreUtils.addAppointment({ instructorId: 'inst1', startTime: '12:00', blockCount: 2, date: '2024-07-01' } as any);
+    const result = await firestoreUtils.addAppointment({ instructorId: 'inst1', startTime: '12:00', blockCount: 2, date: '2024-07-01' });
     expect(result).toBe('appt3');
   });
 
@@ -132,8 +124,6 @@ describe('firestore utilities', () => {
     const instructorId = 'inst1';
     const date = '2024-07-01';
     const result = await firestoreUtils.getAppointmentsByInstructor(instructorId, date);
-    console.log('[TEST] instructorId:', instructorId, 'date:', date);
-    console.log('[TEST] result:', result);
     expect(result.length).toBe(1);
     expect(result[0].instructorId).toBe(instructorId);
     expect(result[0].date).toBe(date);
@@ -159,7 +149,7 @@ describe('firestore utilities', () => {
       blockCount: 1,
       startDate: '2024-07-01',
       occurrences: 3,
-    } as any);
+    });
     expect(Array.isArray(result)).toBe(true);
     expect(result.length).toBe(3);
   });

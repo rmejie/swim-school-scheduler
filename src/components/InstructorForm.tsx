@@ -4,19 +4,22 @@ import { addInstructor } from '../lib/firestore';
 /**
  * Props for the InstructorForm component
  * 
- * @property onSuccess - Callback function called when instructor is successfully added
- * @property onCancel - Callback function called when form is cancelled
+ * @property onSuccess - Callback with the new instructor's ID and trimmed name
+ * @property onCancel - Callback when the form is dismissed
  * 
  * @example
  * ```tsx
  * <InstructorForm 
- *   onSuccess={(id) => console.log('Instructor added:', id)}
+ *   onSuccess={(id, name) => {
+ *     setInstructors(prev => [...prev, { id, name }]);
+ *     setShowForm(false);
+ *   }}
  *   onCancel={() => setShowForm(false)}
  * />
  * ```
  */
 export interface InstructorFormProps {
-  onSuccess: (instructorId: string) => void;
+  onSuccess: (instructorId: string, name: string) => void;
   onCancel: () => void;
 }
 
@@ -94,13 +97,12 @@ const InstructorForm: React.FC<InstructorFormProps> = ({ onSuccess, onCancel }) 
     setLoading(true);
 
     try {
-      const instructorId = await addInstructor({ name: name.trim() });
+      const trimmedName = name.trim();
+      const instructorId = await addInstructor({ name: trimmedName });
       setSuccess(true);
-      setName(''); // Reset form
+      setName('');
       setErrors({});
-      
-      // Call success callback immediately
-      onSuccess(instructorId);
+      onSuccess(instructorId, trimmedName);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to add instructor');
     } finally {
