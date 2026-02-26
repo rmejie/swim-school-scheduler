@@ -92,7 +92,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ instructors, clients,
         type: 'individual',
         blocks,
         status: 'scheduled',
-        createdAt: {} as Appointment['createdAt'],
+        createdAt: new Date().toISOString(),
       };
 
       setSuccess(true);

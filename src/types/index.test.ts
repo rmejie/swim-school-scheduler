@@ -1,31 +1,16 @@
 import { describe, it, expect } from 'vitest';
 import type { Instructor, Client, Appointment } from './index';
 
-import type { Timestamp } from 'firebase/firestore';
-
-// Mock Firestore Timestamp for type checking
-function mockTimestamp(): Timestamp {
-  return {
-    seconds: 0,
-    nanoseconds: 0,
-    toDate: () => new Date(),
-    toMillis: () => 0,
-    isEqual: () => true,
-    toJSON: () => ({ seconds: 0, nanoseconds: 0, type: 'timestamp' }),
-    valueOf: () => '',
-  } as unknown as Timestamp;
-}
-
 describe('Instructor interface', () => {
   it('should require id, name, and createdAt fields', () => {
     const instructor: Instructor = {
       id: 'inst1',
       name: 'Jane Doe',
-      createdAt: mockTimestamp(),
+      createdAt: '2024-07-01T00:00:00Z',
     };
     expect(instructor.id).toBeTypeOf('string');
     expect(instructor.name).toBeTypeOf('string');
-    expect(instructor.createdAt).toBeDefined();
+    expect(instructor.createdAt).toBeTypeOf('string');
   });
 });
 
@@ -36,13 +21,13 @@ describe('Client interface', () => {
       name: 'John Smith',
       email: 'john@example.com',
       phone: '555-1234',
-      createdAt: mockTimestamp(),
+      createdAt: '2024-07-01T00:00:00Z',
     };
     expect(client.id).toBeTypeOf('string');
     expect(client.name).toBeTypeOf('string');
     expect(client.email).toBeTypeOf('string');
     expect(client.phone).toBeTypeOf('string');
-    expect(client.createdAt).toBeDefined();
+    expect(client.createdAt).toBeTypeOf('string');
   });
 });
 
@@ -59,7 +44,7 @@ describe('Appointment interface', () => {
       endTime: '10:30',
       type: 'individual',
       status: 'scheduled',
-      createdAt: mockTimestamp(),
+      createdAt: '2024-07-01T00:00:00Z',
     };
     const recurring: Appointment = {
       ...individual,
@@ -72,7 +57,7 @@ describe('Appointment interface', () => {
     expect(recurring.recurringId).toBeTypeOf('string');
   });
 
-  it('should use Firestore Timestamp for createdAt and properly type date fields', () => {
+  it('should have string createdAt and properly type date fields', () => {
     const appt: Appointment = {
       id: 'appt3',
       instructorId: 'inst1',
@@ -84,11 +69,11 @@ describe('Appointment interface', () => {
       endTime: '11:30',
       type: 'individual',
       status: 'scheduled',
-      createdAt: mockTimestamp(),
+      createdAt: '2024-07-01T00:00:00Z',
     };
-    expect(appt.createdAt).toBeDefined();
-    expect(typeof appt.date).toBe('string');
-    expect(typeof appt.startTime).toBe('string');
-    expect(typeof appt.endTime).toBe('string');
+    expect(appt.createdAt).toBeTypeOf('string');
+    expect(appt.date).toBeTypeOf('string');
+    expect(appt.startTime).toBeTypeOf('string');
+    expect(appt.endTime).toBeTypeOf('string');
   });
-}); 
+});

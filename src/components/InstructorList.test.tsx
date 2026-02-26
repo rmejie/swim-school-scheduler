@@ -4,38 +4,19 @@ import InstructorList from './InstructorList';
 import * as firestoreUtils from '../lib/firestore';
 import type { Instructor } from '../types';
 
-// Mock Firebase utilities
+// Mock data layer
 vi.mock('../lib/firestore', () => ({
   getInstructors: vi.fn(),
 }));
 
 const mockedGetInstructors = firestoreUtils.getInstructors as unknown as ReturnType<typeof vi.fn>;
 
-/**
- * InstructorList Component Tests
- * 
- * Tests the instructor list component including:
- * - Data fetching from Firebase
- * - Loading states
- * - Empty state when no instructors exist
- * - Proper data display in list format
- * - Error handling
- */
 describe('InstructorList', () => {
-  const mockTimestamp = {
-    seconds: 0,
-    nanoseconds: 0,
-    toDate: () => new Date(),
-    toMillis: () => 0,
-    isEqual: () => true,
-    toJSON: () => ({}),
-  };
-
-  const mockInstructors = [
-    { id: 'inst1', name: 'Jane Doe', createdAt: mockTimestamp },
-    { id: 'inst2', name: 'John Smith', createdAt: mockTimestamp },
-    { id: 'inst3', name: 'Sarah Johnson', createdAt: mockTimestamp },
-  ] as unknown as Instructor[];
+  const mockInstructors: Instructor[] = [
+    { id: 'inst1', name: 'Jane Doe', createdAt: '2024-01-01T00:00:00Z' },
+    { id: 'inst2', name: 'John Smith', createdAt: '2024-01-01T00:00:00Z' },
+    { id: 'inst3', name: 'Sarah Johnson', createdAt: '2024-01-01T00:00:00Z' },
+  ];
 
   beforeEach(() => {
     vi.clearAllMocks();

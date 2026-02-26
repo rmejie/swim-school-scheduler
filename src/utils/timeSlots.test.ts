@@ -58,10 +58,11 @@ describe('formatTimeDisplay', () => {
 
 describe('validateAppointmentTime', () => {
   it('should ensure time is within business hours and in the future', () => {
-    const now = new Date();
-    const future = new Date(now.getTime() + 60 * 60 * 1000);
-    expect(validateAppointmentTime(future, '08:00', '20:00')).toBe(true);
-    const past = new Date(now.getTime() - 60 * 60 * 1000);
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(12, 0, 0, 0);
+    expect(validateAppointmentTime(tomorrow, '08:00', '20:00')).toBe(true);
+    const past = new Date(Date.now() - 60 * 60 * 1000);
     expect(validateAppointmentTime(past, '08:00', '20:00')).toBe(false);
   });
   it('should reject times outside business hours', () => {

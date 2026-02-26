@@ -3,7 +3,7 @@ import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import InstructorForm from './InstructorForm';
 import * as firestoreUtils from '../lib/firestore';
 
-// Mock Firebase utilities
+// Mock data layer
 vi.mock('../lib/firestore', () => ({
   addInstructor: vi.fn(),
 }));

@@ -15,7 +15,7 @@ const makeAppointment = (overrides: Partial<Appointment> = {}): Appointment => (
   type: 'individual',
   blocks: ['10:00', '10:20'],
   status: 'scheduled',
-  createdAt: {} as Appointment['createdAt'],
+  createdAt: '2024-07-15T00:00:00Z',
   ...overrides,
 });
 

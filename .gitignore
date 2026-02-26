@@ -10,7 +10,13 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
+backend/static
 *.local
+__pycache__
+*.pyc
+*.pem
+wrapped_dek.bin
+swim_school.db
 
 # Editor directories and files
 .vscode/*

@@ -35,10 +35,7 @@ function App() {
   const [instructorsError, setInstructorsError] = useState<string | null>(null);
   const [clientsError, setClientsError] = useState<string | null>(null);
 
-  const useRealFirestore = import.meta.env.VITE_USE_FIRESTORE === 'true';
-
   useEffect(() => {
-    if (!useRealFirestore) return;
     let isCancelled = false;
     async function load() {
       try {
@@ -53,13 +50,10 @@ function App() {
       }
     }
     load();
-    return () => {
-      isCancelled = true;
-    };
-  }, [useRealFirestore]);
+    return () => { isCancelled = true; };
+  }, []);
 
   useEffect(() => {
-    if (!useRealFirestore) return;
     let isCancelled = false;
     async function load() {
       try {
@@ -74,10 +68,8 @@ function App() {
       }
     }
     load();
-    return () => {
-      isCancelled = true;
-    };
-  }, [useRealFirestore]);
+    return () => { isCancelled = true; };
+  }, []);
 
   useEffect(() => {
     if (activeSection !== 'Schedule') return;

@@ -11,20 +11,11 @@ vi.mock('../lib/firestore', () => ({
 const mockedGetClients = firestoreUtils.getClients as unknown as ReturnType<typeof vi.fn>;
 
 describe('ClientList', () => {
-  const mockTimestamp = {
-    seconds: 0,
-    nanoseconds: 0,
-    toDate: () => new Date(),
-    toMillis: () => 0,
-    isEqual: () => true,
-    toJSON: () => ({}),
-  };
-
-  const mockClients = [
-    { id: 'c1', name: 'Jane Doe', email: 'jane@example.com', phone: '555-1234', createdAt: mockTimestamp },
-    { id: 'c2', name: 'John Smith', email: 'john@example.com', phone: '', createdAt: mockTimestamp },
-    { id: 'c3', name: 'Sarah Johnson', email: 'sarah@example.com', phone: '555-5678', createdAt: mockTimestamp },
-  ] as unknown as Client[];
+  const mockClients: Client[] = [
+    { id: 'c1', name: 'Jane Doe', email: 'jane@example.com', phone: '555-1234', createdAt: '2024-01-01T00:00:00Z' },
+    { id: 'c2', name: 'John Smith', email: 'john@example.com', phone: '', createdAt: '2024-01-01T00:00:00Z' },
+    { id: 'c3', name: 'Sarah Johnson', email: 'sarah@example.com', phone: '555-5678', createdAt: '2024-01-01T00:00:00Z' },
+  ];
 
   beforeEach(() => {
     vi.clearAllMocks();

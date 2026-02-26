@@ -1,166 +1,156 @@
 # Swim School Scheduler
 
-A React + TypeScript scheduling application for swim schools, built with Firebase, Tailwind CSS, and a test-driven development approach.
+A full-stack scheduling application for swim schools. React + TypeScript frontend served from a Python (FastAPI) backend with SQLite storage and AES-256-GCM field-level encryption.
 
 ## Features
 
-- **Instructor Management** -- Add and list swim instructors with form validation
-- **Client Management** -- Add and list clients with name, email, and phone fields
+- **Instructor Management** -- Add and list swim instructors
+- **Client Management** -- Add and list clients with name, email, and phone
 - **Appointment Scheduling** -- 20-minute block-based scheduling with double-booking prevention
 - **Recurring Appointments** -- Generate weekly recurring lesson series
-- **Dashboard** -- Overview of instructors, appointments, and active clients with live counts
-- **Error Boundary** -- Graceful error handling with customizable fallback UI
-- **Responsive Design** -- Mobile-first layout with Tailwind CSS
-- **Demo Mode** -- Runs without Firebase credentials using in-memory mocks
+- **Dashboard** -- Live counts for instructors, appointments, and clients
+- **Field-Level Encryption** -- Sensitive PII (names, email, phone) encrypted at rest using AES-GCM with ECC key wrapping
+- **Single Server** -- One command starts both the API and the frontend UI
 
 ## Tech Stack
 
 | Layer | Technology |
 |-------|-----------|
-| Framework | React 19 + TypeScript 5.8 |
+| Frontend | React 19 + TypeScript 5.8 + Tailwind CSS 3.4 |
 | Build | Vite 7 |
-| Backend | Firebase Firestore + Anonymous Auth |
-| Styling | Tailwind CSS 3.4 |
-| Testing | Vitest + React Testing Library |
-| Linting | ESLint + TypeScript ESLint |
+| Backend | Python 3.10+ / FastAPI / SQLAlchemy / SQLite |
+| Encryption | AES-256-GCM with ECC P-256 key wrapping |
+| Testing | Vitest + React Testing Library (frontend), Pytest (backend) |
 
-## Getting Started
+## Quick Start
 
 ### Prerequisites
 
-- Node.js 18+
-- npm 9+
-- A Firebase project (optional -- demo mode works without one)
+- Node.js 18+ and npm 9+
+- Python 3.10+
 
-### Installation
+### Install
 
 ```bash
 git clone https://github.com/your-username/swim-school-scheduler.git
 cd swim-school-scheduler
+
+# Frontend dependencies
 npm install
+
+# Backend dependencies
+cd backend
+pip install -r requirements.txt
 ```
 
-### Environment Variables
-
-Create a `.env` file for Firebase credentials:
-
-```
-VITE_FIREBASE_API_KEY=your-api-key
-VITE_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=your-project-id
-VITE_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
-VITE_FIREBASE_MESSAGING_SENDER_ID=your-sender-id
-VITE_FIREBASE_APP_ID=your-app-id
-VITE_USE_FIRESTORE=true
-```
-
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `VITE_FIREBASE_*` | No | Firebase project credentials |
-| `VITE_USE_FIRESTORE` | No | Set to `true` to connect to a real Firestore instance. When omitted, the app runs in demo mode with in-memory mocks. |
-
-### Development
+### Run
 
 ```bash
-npm run dev        # Start dev server at http://localhost:5173
-npm run build      # Production build (TypeScript check + Vite bundle)
-npm run preview    # Preview production build locally
-npm run lint       # Run ESLint
+cd backend
+python run.py          # builds frontend, starts server at http://127.0.0.1:8000
+python run.py --skip-build   # start without rebuilding frontend
+python run.py --port 3000    # use a different port
 ```
+
+Open **http://127.0.0.1:8000** in your browser -- that's it, one URL.
+
+### Development (hot reload)
+
+For frontend development with hot reload, run the backend and Vite dev server side-by-side:
+
+```bash
+# Terminal 1 -- backend API
+cd backend
+python run.py --skip-build
+
+# Terminal 2 -- Vite dev server (proxies /api to backend)
+npm run dev
+```
+
+The Vite dev server at `http://localhost:5173` automatically proxies `/api/*` requests to the backend.
 
 ## Testing
 
 ```bash
-npm test               # Run tests in watch mode
-npm run test:run       # Run tests once
-npm run test:ui        # Run tests with Vitest UI
-npm run test:coverage  # Generate coverage report
+# Frontend (152 tests)
+npm test               # watch mode
+npx vitest run         # single run
+npx vitest run --coverage
+
+# Backend (50 tests)
+cd backend
+python -m pytest tests/ -v
 ```
-
-### Testing approach
-
-The project follows **Test-Driven Development (TDD)**:
-
-1. Tests are written first for each component and utility
-2. Implementation follows to make tests pass
-3. Firebase operations are mocked in all tests via `src/test/setup.ts`
-
-All test files live alongside their components (`*.test.tsx`). Mocks use `vi.mock` for Firestore functions and `vi.clearAllMocks()` in `beforeEach`.
 
 ## Project Structure
 
 ```
-src/
-├── components/
-│   ├── AppointmentsTable   # Lesson schedule table
-│   ├── ClientForm          # Add client form with name/email/phone validation
-│   ├── ClientList          # List of clients from Firestore
-│   ├── DashboardLayout     # Admin dashboard shell
-│   ├── ErrorBoundary       # React error boundary with fallback UI
-│   ├── InstructorForm      # Add instructor form with validation
-│   ├── InstructorList      # List of instructors from Firestore
-│   ├── Layout              # Main app layout (header + nav + content)
-│   ├── LoaderSwimmer       # Animated loading indicator
-│   ├── Sidebar             # Collapsible sidebar navigation
-│   ├── StatCard            # Statistic display card
-│   ├── TopNav              # Top navigation bar
-│   └── WaveDivider         # Decorative SVG wave
-├── lib/
-│   ├── firebase.ts         # Firebase app initialization
-│   └── firestore.ts        # Firestore CRUD + browser demo mocks
-├── types/
-│   └── index.ts            # TypeScript interfaces (Instructor, Client, Appointment)
-├── utils/
-│   └── timeSlots.ts        # Time slot generation and conflict detection
-├── test/
-│   └── setup.ts            # Vitest global setup and Firebase mocks
-├── App.tsx                 # Root component with section routing + ErrorBoundary
-└── main.tsx                # React entry point
+swim-school-scheduler/
+├── src/                      # React frontend
+│   ├── components/           # UI components + tests
+│   ├── lib/
+│   │   ├── api.ts            # HTTP client (relative URLs)
+│   │   └── firestore.ts      # Data access layer (calls api.ts)
+│   ├── types/index.ts        # TypeScript interfaces
+│   ├── utils/timeSlots.ts    # Time slot logic + conflict detection
+│   └── App.tsx               # Root component
+├── backend/
+│   ├── app/
+│   │   ├── main.py           # FastAPI app + static file serving
+│   │   ├── database.py       # SQLAlchemy + SQLite
+│   │   ├── models.py         # ORM models (encrypted fields)
+│   │   ├── crypto.py         # AES-GCM encryption + ECC key wrapping
+│   │   ├── schemas.py        # Pydantic request/response models
+│   │   └── routes/           # API endpoints
+│   ├── tests/                # Pytest test suite
+│   ├── run.py                # Entry point (build + serve)
+│   └── requirements.txt      # Python dependencies
+├── vite.config.ts            # Builds to backend/static, proxies /api in dev
+└── package.json
 ```
-
-## Component Reference
-
-| Component | Props | Description |
-|-----------|-------|-------------|
-| `InstructorForm` | `onSuccess(id, name)`, `onCancel()` | Form to add a new instructor |
-| `InstructorList` | -- | Fetches and displays all instructors |
-| `ClientForm` | `onSuccess(id, name)`, `onCancel()` | Form to add a new client (name, email, phone) |
-| `ClientList` | -- | Fetches and displays all clients |
-| `ErrorBoundary` | `fallback?` (ReactNode) | Catches render errors, shows fallback UI |
-| `Layout` | `activeSection`, `onSectionChange`, `children` | App shell with sidebar navigation |
 
 ## Architecture
 
+### Single-Server Design
+
+```
+Browser  ─────►  FastAPI (port 8000)
+                   ├── /api/*        → REST endpoints (JSON)
+                   └── /*            → React SPA (static files)
+```
+
+The Vite build outputs to `backend/static/`. FastAPI serves those files for any non-API route, with `index.html` as the SPA fallback.
+
 ### Scheduling Model
 
-Appointments use a **20-minute block system**:
 - 1 block = 20 minutes, 2 blocks = 40 minutes, 3 blocks = 60 minutes
 - Blocks start at :00, :20, or :40 of each hour
 - Operating hours: 8:00 AM -- 8:00 PM
-- Back-to-back appointments are allowed; double-booking the same block is prevented
+- Back-to-back appointments allowed; same-block double-booking prevented
 
-### Data Flow
+### Encryption
 
-1. Components call functions from `src/lib/firestore.ts`
-2. Firestore functions validate input, check for conflicts, and write to Firestore
-3. Components manage loading/error/success states via React hooks
-4. When `VITE_USE_FIRESTORE` is not `true`, browser-side mocks provide demo data
+Sensitive fields (names, email, phone) are encrypted at rest in SQLite:
 
-### Type System
+1. An ECC P-256 key pair wraps a symmetric Data Encryption Key (DEK)
+2. Each field value is encrypted with AES-256-GCM using a random nonce
+3. Keys are generated automatically on first run
 
-All data structures are defined in `src/types/index.ts`:
-- `Instructor` -- id, name, createdAt
-- `Client` -- id, name, email, phone, createdAt
-- `Appointment` -- id, instructorId, clientId, date, startTime, endTime, type, blocks, status, createdAt
+## API Endpoints
 
-## Business Rules
-
-- Instructor names must be at least 2 characters
-- Client names and emails are required; email must be valid format
-- Appointments cannot be scheduled in the past
-- Appointments must be within business hours (8 AM -- 8 PM)
-- Maximum 2 months advance booking
-- Double-booking prevention via block-level conflict detection
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/health` | Health check |
+| POST | `/api/instructors` | Create instructor |
+| GET | `/api/instructors` | List instructors |
+| DELETE | `/api/instructors/{id}` | Delete instructor |
+| POST | `/api/clients` | Create client |
+| GET | `/api/clients` | List clients |
+| DELETE | `/api/clients/{id}` | Delete client |
+| POST | `/api/appointments` | Create appointment |
+| GET | `/api/appointments?date=YYYY-MM-DD` | List appointments |
+| PATCH | `/api/appointments/{id}/cancel` | Cancel appointment |
+| POST | `/api/appointments/recurring` | Create recurring series |
 
 ## License
 
