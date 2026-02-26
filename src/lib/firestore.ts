@@ -106,6 +106,67 @@ export async function getClients(): Promise<Client[]> {
   return snap.docs.map(d => ({ id: d.id, ...d.data() })) as Client[];
 }
 
+// In-memory appointment store for browser demo
+const browserAppointments: Appointment[] = [];
+
+function browserAddAppointment(data: Partial<Appointment> & { instructorId: string; startTime: string; blockCount: number; date: string }): Promise<string> {
+  return new Promise((resolve, reject) => {
+    if (!data.instructorId || !data.startTime || !data.date) {
+      return reject(new Error('Missing required fields'));
+    }
+    const requestedBlocks = getAppointmentBlocks(data.startTime, data.blockCount);
+    const existing = browserAppointments.filter(
+      a => a.instructorId === data.instructorId && a.date === data.date && a.status === 'scheduled'
+    );
+    for (const appt of existing) {
+      if (appt.blocks && checkBlockConflict(requestedBlocks, appt.blocks)) {
+        return reject(new Error('Double booking'));
+      }
+    }
+    const id = 'demo-' + Math.random().toString(36).slice(2, 8);
+    const lastBlock = requestedBlocks[requestedBlocks.length - 1];
+    const [eh, em] = lastBlock.split(':').map(Number);
+    const endMins = eh * 60 + em + 20;
+    const endTime = `${Math.floor(endMins / 60).toString().padStart(2, '0')}:${(endMins % 60).toString().padStart(2, '0')}`;
+    browserAppointments.push({
+      id,
+      instructorId: data.instructorId,
+      instructorName: data.instructorName || '',
+      clientId: data.clientId || '',
+      clientName: data.clientName || '',
+      date: data.date,
+      startTime: data.startTime,
+      endTime,
+      type: data.type || 'individual',
+      blocks: requestedBlocks,
+      status: 'scheduled',
+      createdAt: {} as Appointment['createdAt'],
+    });
+    setTimeout(() => resolve(id), 300);
+  });
+}
+
+function browserGetAppointmentsByDate(date: string): Promise<Appointment[]> {
+  return new Promise((resolve) => {
+    setTimeout(() => resolve(browserAppointments.filter(a => a.date === date)), 200);
+  });
+}
+
+function browserGetAppointmentsByInstructor(instructorId: string, date: string): Promise<Appointment[]> {
+  return new Promise((resolve) => {
+    setTimeout(() => resolve(browserAppointments.filter(a => a.instructorId === instructorId && a.date === date)), 200);
+  });
+}
+
+function browserCancelAppointment(id: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const appt = browserAppointments.find(a => a.id === id);
+    if (!appt) return reject(new Error('Appointment not found'));
+    appt.status = 'cancelled';
+    setTimeout(() => resolve(), 200);
+  });
+}
+
 /**
  * Adds an appointment, preventing double booking using block logic.
  * @param data - Appointment data (must include instructorId, startTime, blockCount)
@@ -113,6 +174,10 @@ export async function getClients(): Promise<Client[]> {
  * @throws Error if double booking detected
  */
 export async function addAppointment(data: Partial<Appointment> & { instructorId: string; startTime: string; blockCount: number; date: string }): Promise<string> {
+  const isTest = import.meta.env?.MODE === 'test';
+  if (typeof window !== 'undefined' && !useRealFirestoreInBrowser && !isTest) {
+    return browserAddAppointment(data);
+  }
   const existing = await getAppointmentsByInstructor(data.instructorId, data.date);
   const requestedBlocks = getAppointmentBlocks(data.startTime, data.blockCount);
   for (const appt of existing) {
@@ -135,6 +200,10 @@ export async function addAppointment(data: Partial<Appointment> & { instructorId
  * @returns Array of Appointment objects
  */
 export async function getAppointmentsByDate(date: string): Promise<Appointment[]> {
+  const isTest = import.meta.env?.MODE === 'test';
+  if (typeof window !== 'undefined' && !useRealFirestoreInBrowser && !isTest) {
+    return browserGetAppointmentsByDate(date);
+  }
   const snap = await getDocs(collection(db, 'appointments'));
   const all = snap.docs.map(d => ({ id: d.id, ...d.data() })) as Appointment[];
   return all.filter(a => a.date === date);
@@ -147,6 +216,10 @@ export async function getAppointmentsByDate(date: string): Promise<Appointment[]
  * @returns Array of Appointment objects
  */
 export async function getAppointmentsByInstructor(instructorId: string, date: string): Promise<Appointment[]> {
+  const isTest = import.meta.env?.MODE === 'test';
+  if (typeof window !== 'undefined' && !useRealFirestoreInBrowser && !isTest) {
+    return browserGetAppointmentsByInstructor(instructorId, date);
+  }
   const snap = await getDocs(collection(db, 'appointments'));
   const all = snap.docs.map(d => ({ id: d.id, ...d.data() })) as Appointment[];
   return all.filter(a => a.instructorId === instructorId && a.date === date);
@@ -158,6 +231,10 @@ export async function getAppointmentsByInstructor(instructorId: string, date: st
  * @returns void
  */
 export async function cancelAppointment(id: string): Promise<void> {
+  const isTest = import.meta.env?.MODE === 'test';
+  if (typeof window !== 'undefined' && !useRealFirestoreInBrowser && !isTest) {
+    return browserCancelAppointment(id);
+  }
   await updateDoc(doc(db, 'appointments', id), { status: 'cancelled' });
 }
 

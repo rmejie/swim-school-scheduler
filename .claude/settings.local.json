@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(head:*)",
+      "Bash(tail:*)",
+      "Bash(cd /c/Users/rmeji/Documents/GitHub/swim-school-scheduler && npx vitest run 2>&1)",
+      "Bash(cd /c/Users/rmeji/Documents/GitHub/swim-school-scheduler && npm run build 2>&1)",
+      "Bash(cd /c/Users/rmeji/Documents/GitHub/swim-school-scheduler && git fetch origin 2>&1)",
+      "Bash(cd /c/Users/rmeji/Documents/GitHub/swim-school-scheduler && git log --oneline origin/phase-3-ui-layer --not HEAD -20 2>&1)",
+      "Bash(cd /c/Users/rmeji/Documents/GitHub/swim-school-scheduler && git checkout -b phase-4-client-management-and-fixes 2>&1)",
+      "Bash(cd /c/Users/rmeji/Documents/GitHub/swim-school-scheduler && git add eslint.config.js src/components/DashboardLayout.tsx src/components/InstructorList.test.tsx src/lib/firestore.test.ts src/lib/firestore.ts src/types/index.test.ts src/types/index.ts src/utils/timeSlots.ts src/lib/firebase.ts src/components/InstructorForm.test.tsx src/components/InstructorForm.tsx src/components/Sidebar.test.tsx vitest.config.ts package.json package-lock.json 2>&1)",
+      "Bash(cd /c/Users/rmeji/Documents/GitHub/swim-school-scheduler && git add src/components/ClientForm.tsx src/components/ClientList.tsx src/components/ErrorBoundary.tsx src/components/ClientForm.test.tsx src/components/ClientList.test.tsx src/components/ErrorBoundary.test.tsx 2>&1)",
+      "Bash(cd /c/Users/rmeji/Documents/GitHub/swim-school-scheduler && git add src/App.tsx 2>&1)",
+      "Bash(cd /c/Users/rmeji/Documents/GitHub/swim-school-scheduler && git push -u origin phase-4-client-management-and-fixes 2>&1)",
+      "Bash(cd /c/Users/rmeji/Documents/GitHub/swim-school-scheduler && gh auth status 2>&1)",
+      "Bash(where gh 2>&1 || which gh 2>&1)",
+      "Bash(cd /c/Users/rmeji/Documents/GitHub/swim-school-scheduler && git config credential.helper 2>&1)",
+      "Bash(cd /c/Users/rmeji/Documents/GitHub/swim-school-scheduler && git remote set-url origin https://github.com/rmejie/swim-school-scheduler.git 2>&1)",
+      "Bash(cd /c/Users/rmeji/Documents/GitHub/swim-school-scheduler && npx eslint . 2>&1)"
+    ]
+  }
+}

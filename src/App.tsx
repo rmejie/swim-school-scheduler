@@ -5,9 +5,13 @@ import InstructorForm from './components/InstructorForm';
 import InstructorList from './components/InstructorList';
 import ClientForm from './components/ClientForm';
 import ClientList from './components/ClientList';
+import DatePicker from './components/DatePicker';
+import AppointmentList from './components/AppointmentList';
+import AppointmentForm from './components/AppointmentForm';
 import ErrorBoundary from './components/ErrorBoundary';
 import './App.css';
-import { getInstructors as fetchInstructors, getClients as fetchClients } from './lib/firestore';
+import { getInstructors as fetchInstructors, getClients as fetchClients, getAppointmentsByDate, cancelAppointment } from './lib/firestore';
+import type { Appointment } from './types';
 
 /**
  * Main App component showcasing the swim school scheduler components
@@ -16,6 +20,11 @@ function App() {
   const [activeSection, setActiveSection] = useState<NavigationSection>('Dashboard');
   const [showInstructorForm, setShowInstructorForm] = useState(false);
   const [showClientForm, setShowClientForm] = useState(false);
+  const [showAppointmentForm, setShowAppointmentForm] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [loadingAppointments, setLoadingAppointments] = useState(false);
+  const [appointmentsError, setAppointmentsError] = useState<string | null>(null);
   const [instructors, setInstructors] = useState<Array<{ id: string; name: string }>>([
     { id: '1', name: 'Sarah Johnson' },
     { id: '2', name: 'Mike Chen' },
@@ -70,10 +79,30 @@ function App() {
     };
   }, [useRealFirestore]);
 
+  useEffect(() => {
+    if (activeSection !== 'Schedule') return;
+    let isCancelled = false;
+    async function loadAppointments() {
+      try {
+        setLoadingAppointments(true);
+        setAppointmentsError(null);
+        const data = await getAppointmentsByDate(selectedDate);
+        if (!isCancelled) setAppointments(data);
+      } catch (err) {
+        if (!isCancelled) setAppointmentsError(err instanceof Error ? err.message : 'Failed to load appointments');
+      } finally {
+        if (!isCancelled) setLoadingAppointments(false);
+      }
+    }
+    loadAppointments();
+    return () => { isCancelled = true; };
+  }, [selectedDate, activeSection]);
+
   const handleSectionChange = (section: NavigationSection) => {
     setActiveSection(section);
     setShowInstructorForm(false);
     setShowClientForm(false);
+    setShowAppointmentForm(false);
   };
 
   const handleInstructorSuccess = (instructorId: string, name: string) => {
@@ -86,6 +115,20 @@ function App() {
     const newClient = { id: clientId, name, email: '' };
     setClients(prev => [...prev, newClient]);
     setShowClientForm(false);
+  };
+
+  const handleAppointmentSuccess = (appointment: Appointment) => {
+    setAppointments(prev => [...prev, appointment]);
+    setShowAppointmentForm(false);
+  };
+
+  const handleCancelAppointment = async (id: string) => {
+    try {
+      await cancelAppointment(id);
+      setAppointments(prev => prev.map(a => a.id === id ? { ...a, status: 'cancelled' as const } : a));
+    } catch (err) {
+      setAppointmentsError(err instanceof Error ? err.message : 'Failed to cancel appointment');
+    }
   };
 
   const renderContent = () => {
@@ -131,10 +174,36 @@ function App() {
       case 'Schedule':
         return (
           <div className="space-y-6">
-            <h2 className="text-3xl font-bold text-gray-900">Schedule</h2>
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <p className="text-gray-600">Schedule management coming soon...</p>
+            <div className="flex justify-between items-center">
+              <h2 className="text-3xl font-bold text-gray-900">Schedule</h2>
+              <button
+                onClick={() => setShowAppointmentForm(true)}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors duration-200"
+              >
+                Add Appointment
+              </button>
             </div>
+            <DatePicker selectedDate={selectedDate} onChange={setSelectedDate} />
+            {appointmentsError && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                <p className="text-sm text-red-600">{appointmentsError}</p>
+              </div>
+            )}
+            {showAppointmentForm ? (
+              <AppointmentForm
+                instructors={instructors}
+                clients={clients}
+                selectedDate={selectedDate}
+                onSuccess={handleAppointmentSuccess}
+                onCancel={() => setShowAppointmentForm(false)}
+              />
+            ) : (
+              <AppointmentList
+                appointments={appointments}
+                loading={loadingAppointments}
+                onCancel={handleCancelAppointment}
+              />
+            )}
           </div>
         );
       case 'Instructors':
